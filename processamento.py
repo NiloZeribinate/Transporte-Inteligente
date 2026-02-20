@@ -27,21 +27,21 @@ def get_quant(selected_date):
         except:
             data[i] = None
     
-    return data
+    return data #retorna um dict com a contagem de 'Linha' de cada df na lista de dataframes em certa data?
     
 def get_week_count(selected_sunday):
     data = {}
     
     for i in st.session_state.bases:
-        data[ st.session_state.bases[i]['fullname'] ] = [None] * 7
+        data[ st.session_state.bases[i]['fullname'] ] = [None] * 7 #inicia 7 campos vazios
         
     for j in range(7):
-        quant = get_quant(selected_sunday + datetime.timedelta(j))
+        quant = get_quant(selected_sunday + datetime.timedelta(j)) #faz isso para cada dia da semana
         
         for i in quant:
-            data[ st.session_state.bases[i]['fullname'] ][j] = quant[i]
+            data[ st.session_state.bases[i]['fullname'] ][j] = quant[i] #preenche os 7 campos vazios com cada quantidade de cada dia da semana preenchidos em quant
     
-    return data
+    return data #retorna um dict de contagem de 'Linha' dado um certo dia da semana(separa em 7 dias)
 
 def weekly_change():
     selected_date = st.session_state['weekly_date']
@@ -60,7 +60,7 @@ def weekly_change():
         day_i = last_sunday + datetime.timedelta(i)
         data['Dia das Transações'][i] = f'{day_i.day:02d}/{day_i.month:02d}'
     
-    st.session_state['weekly_df'] = pd.DataFrame(data)
+    st.session_state['weekly_df'] = pd.DataFrame(data) #cria um dataframe da semana selecionada
 
 
 if st.session_state['weekly_df'] is None:

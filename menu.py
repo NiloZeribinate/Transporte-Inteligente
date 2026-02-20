@@ -10,7 +10,8 @@ st.set_page_config(
 arquivos = st.Page("input.py", title="Insercao de Arquivos")
 amostra = st.Page("processamento.py", title="Analise de Dados")
 menu = st.Page("inicio.py", title="Menu")
-pg = st.navigation([menu,amostra,arquivos])
+user= st.Page("novosgraficos.py", title="Customizacao de Graficos")
+pg = st.navigation([menu,amostra,arquivos,user])
 
 
 if 'weekly_df' not in st.session_state:
@@ -49,7 +50,7 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
     
     for key in st.session_state.bases:
         filename = (
-            + st.session_state.bases[key]['pref']
+            st.session_state.bases[key]['pref']
             + f'{selected_date.year}-{selected_date.month:02d}-{selected_date.day:02d}.csv'
         )
         
