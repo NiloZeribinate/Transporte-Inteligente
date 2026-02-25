@@ -4,9 +4,9 @@ import pandas as pd
 
 input=st.file_uploader("Insira aqui a pasta com os arquivos que voce quer analisar", type="csv", accept_multiple_files="directory")
 #file uploader retorna uma lista de objetos arquivos, mas nao salva informacao de diretorio
-
-for i in range(len(input)):
-    st.session_state.arquivos[input[i].name]=input[i]  #crio um dict com todos os arquivos, so referir ao nome do arquivo agora para acha-lo
+if input:
+    for i in range(len(input)):
+        st.session_state.arquivos[input[i].name]=input[i]  #crio um dict com todos os arquivos, so referir ao nome do arquivo agora para acha-lo
 
 st.markdown(
     """

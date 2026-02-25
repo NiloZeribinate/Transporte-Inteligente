@@ -26,39 +26,28 @@ if 'arquivos' not in st.session_state:
 if 'bases' not in st.session_state :
     st.session_state.bases={
         'be': {
-            'dir': './org-BE/',
+            'dir': 'org-BE/',
             'pref': 'be_',
-            'dayfirst': True,
+            'dayfirst': False,
             'fullname': 'Bilhetagem Eletrônica'
         },
         'bu': {
-            'dir': './diario/org/',
+            'dir': 'diario/org/',
             'pref': 'bu_',
-            'dayfirst': True,
+            'dayfirst': False,
             'fullname': 'Bilhete Único'
         },
         'gt': {
-            'dir': './GT/',
+            'dir': 'GT/',
             'pref': 'gt_',
             'dayfirst': False,
             'fullname': 'Gratuidade'
         },
     }
 
-def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que adaptada pra qualquer diretorio
-    data = {}
-    
-    for key in st.session_state.bases:
-        filename = (
-            st.session_state.bases[key]['pref']
-            + f'{selected_date.year}-{selected_date.month:02d}-{selected_date.day:02d}.csv'
-        )
-        
-        try:
-            data[key] = pd.read_csv(st.session_state.arquivos[filename], sep=';', dayfirst = st.session_state.bases[key]['dayfirst'], parse_dates=['Data da Transação', 'Data do Processamento'])
-        except Exception as e:
-            print(e)
-            data[key] = None
-    return data
+
+st.write("Arquivos carregados:")
+st.write(list(st.session_state.arquivos.keys()))
+
 
 pg.run()

@@ -1,7 +1,38 @@
 import streamlit as st
 import pandas as pd
 import datetime
-from menu import get_dfs
+
+def encontrar_arquivo(nome_final):
+    for nome_real in st.session_state.arquivos:
+        if nome_real.endswith(nome_final):
+            return st.session_state.arquivos[nome_real]
+    return None
+
+def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que adaptada pra qualquer diretorio
+    st.write("get_dfs FOI CHAMADA")
+    data = {}
+    
+    for key in st.session_state.bases:
+        nome_final = (
+            st.session_state.bases[key]['pref']
+            + f'{selected_date.year}-{selected_date.month:02d}-{selected_date.day:02d}.csv'
+        )
+
+        file = encontrar_arquivo(nome_final)
+        st.write("Procurando:", nome_final)
+        st.write("Arquivos disponíveis:", list(st.session_state.arquivos.keys()))
+        if file is not None:
+            data[key] = pd.read_csv(
+                file,
+                sep=';',
+                dayfirst=st.session_state.bases[key]['dayfirst'],
+                parse_dates=['Data da Transação', 'Data do Processamento']
+            )
+        else:
+            print("Nao encontrado:", nome_final)
+            data[key] = None
+    
+    return data
 
 
 st.title("Transporte Inteligente")
@@ -16,16 +47,19 @@ st.divider() # -------------------------
 
 
 
+if st.button("TESTAR GET DFS"):
+    get_dfs(datetime.date(2025,8,1))
 
 def get_quant(selected_date):
     data = {}
-    dfs = get_dfs(selected_date);
-    
+    dfs = get_dfs(selected_date)
+    # st.write("DFS recebidos:", {k: type(v) for k,v in dfs.items()})
     for i in dfs:
         try:
             data[i] = dfs[i]['Linha'].count()
         except:
             data[i] = None
+            # st.write("Erro")
     
     return data #retorna um dict com a contagem de 'Linha' de cada df na lista de dataframes em certa data?
     
@@ -40,8 +74,10 @@ def get_week_count(selected_sunday):
         
         for i in quant:
             data[ st.session_state.bases[i]['fullname'] ][j] = quant[i] #preenche os 7 campos vazios com cada quantidade de cada dia da semana preenchidos em quant
-    
+    if data is None:
+        st.write("Weekcount deu ruim")
     return data #retorna um dict de contagem de 'Linha' dado um certo dia da semana(separa em 7 dias)
+
 
 def weekly_change():
     selected_date = st.session_state['weekly_date']
