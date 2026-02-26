@@ -9,7 +9,7 @@ def encontrar_arquivo(nome_final):
     return None
 
 def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que adaptada pra qualquer diretorio
-    st.write("get_dfs FOI CHAMADA")
+    # st.write("get_dfs FOI CHAMADA")
     data = {}
     
     for key in st.session_state.bases:
@@ -19,9 +19,10 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
         )
 
         file = encontrar_arquivo(nome_final)
-        st.write("Procurando:", nome_final)
-        st.write("Arquivos disponíveis:", list(st.session_state.arquivos.keys()))
+        # st.write("Procurando:", nome_final)
+        # st.write("Arquivos disponíveis:", list(st.session_state.arquivos.keys()))
         if file is not None:
+            file.seek(0) #se ele ler o mesmo arquivo mais de uma vez, como file eh um tipo *FILE, tem que resetar o ponteiro pro inicio do arquivo
             data[key] = pd.read_csv(
                 file,
                 sep=';',
