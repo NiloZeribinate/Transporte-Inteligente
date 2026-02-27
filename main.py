@@ -10,33 +10,36 @@ bases = {
 		'dir': './org-BE/',
 		'pref': 'be_',
 		'dayfirst': True,
-		'fullname': 'Bilhetagem Eletrônica'
+		'fullname': 'Bilhetagem Eletrônica',
+		'color': '#2ca1e7'
 	},
 	'bu': {
 		'dir': './diario/org/',
 		'pref': 'bu_',
 		'dayfirst': True,
-		'fullname': 'Bilhete Único'
+		'fullname': 'Bilhete Único',
+		'color': '#ff6683'
 	},
 	'gt': {
 		'dir': './GT/',
 		'pref': 'gt_',
 		'dayfirst': False,
-		'fullname': 'Gratuidade'
+		'fullname': 'Gratuidade',
+		'color': '#ffcb61'
 	},
 }
 
-st.set_page_config(
-    page_title="Transporte Inteligente",
-    page_icon=":bus:",
-
-    layout="wide",
-)
+def get_base_values_by_key(key):
+    values = []
+    
+    for i in bases:
+        values.append( bases[i][key] )
+    
+    return values
 
 
 st.title("Transporte Inteligente")
 st.caption("Um protótipo da ferramenta de exibição das informações sobre o Sistema de Bilhetagem Eletrônica do Estado do Rio de Janeiro")
-
 
 st.warning(":warning:  Nessa versão é possível verificar apenas informações referentes ao mês de agosto de 2025.")
 
@@ -46,9 +49,6 @@ st.divider() # -------------------------
 
 if 'weekly_df' not in st.session_state:
     st.session_state['weekly_df'] = None
-
-if 'weekly_date' not in st.session_state:
-    st.session_state['weekly_date'] = datetime.date(2025, 8, 5)
 
 
 def get_dfs(selected_date):
@@ -85,51 +85,44 @@ def get_dfs(selected_date):
     
     return data
 
-def get_quant(selected_date):
-    data = {}
-    dfs = get_dfs(selected_date);
+def get_daily_transaction_counts(selected_date):
+    data = {
+        'Dia das Transações': [ selected_date ]
+    }
+    
+    dfs = get_dfs(selected_date)
     
     for i in dfs:
+        column_name = bases[i]["fullname"]
+        
         try:
-            data[i] = dfs[i]['Linha'].count()
+            data[ column_name ] = [ dfs[i]['Linha'].count() ]
         except:
-            data[i] = None
+            data[ column_name ] = [ None ]
     
-    return data
+    return pd.DataFrame(data)
     
-def get_week_count(selected_sunday):
-    data = {}
-    
-    for i in bases:
-        data[ bases[i]['fullname'] ] = [None] * 7
+def get_transaction_counts_in_range(start_date, quant_days):
+    data = [None] * quant_days
         
-    for j in range(7):
-        quant = get_quant(selected_sunday + datetime.timedelta(j))
+    for j in range(quant_days):
+        current_date = start_date + datetime.timedelta(j)
         
-        for i in quant:
-            data[ bases[i]['fullname'] ][j] = quant[i]
+        data[j] = get_daily_transaction_counts( current_date )
     
-    return data
+    
+    df = pd.concat(data, axis=0, ignore_index=True)
+    
+    return df
 
 def weekly_change():
     selected_date = st.session_state['weekly_date']
     
-    last_sunday = selected_date - datetime.timedelta((selected_date.weekday() + 1) % 7)
+    last_sunday = selected_date - datetime.timedelta( selected_date.weekday() + 1 )
     
-    data = get_week_count(last_sunday)
+    data = get_transaction_counts_in_range(last_sunday, 7)
     
-    if data is None:
-        st.session_state['weekly_df'] = None
-        return 
-    
-    data['Dia das Transações'] = [None] * 7
-    
-    for i in range(7):
-        day_i = last_sunday + datetime.timedelta(i)
-        data['Dia das Transações'][i] = f'{day_i.day:02d}/{day_i.month:02d}'
-    
-    st.session_state['weekly_df'] = pd.DataFrame(data)
-
+    st.session_state['weekly_df'] = data
 
 if st.session_state['weekly_df'] is None:
     weekly_change()
@@ -137,9 +130,10 @@ if st.session_state['weekly_df'] is None:
 
 with st.container():
     st.header("Balanço Semanal")
-
+    
     selected_week_day = st.date_input(
         "Selecione um dia da semana que deseja analisar",
+        datetime.date(2025, 8, 5),
         min_value = datetime.date(2025, 5, 1),
         max_value = datetime.datetime.today(),
         on_change = weekly_change,
@@ -151,14 +145,241 @@ with st.container():
     if df is not None:
         col1, col2 = st.columns([3,1])
 
-        col1.bar_chart(df, x='Dia das Transações', x_label='Dias', y_label='Quantidade de Transações', use_container_width=True)
+        average = [1300000, 3200000, 3300000, 2900000, 2800000, 2600000, 1300000]
+        
+        df['Média'] = average
+        
+        df_long = df.melt(
+            id_vars    = ['Dia das Transações', 'Média'],
+            value_vars = df.drop(columns=['Dia das Transações']).columns.array,
+            var_name   = 'modality',
+            value_name = 'quantity'
+        )
+        
+        styler = df_long.copy()
+        
+    
+        col1.vega_lite_chart(styler, {
+            'layer': [
+                {
+                    'mark': {'type': 'bar', 'tooltip': True},
+                    'encoding': {
+                        'x': {
+                            'field': 'Dia das Transações', 
+                            'type': 'temporal'
+                        },
+                        'y': {
+                            'field': 'quantity', 
+                            'type': 'quantitative', 
+                            'title': 'Total de Transações',
+                            'stack': 'zero'
+                        },
+                        'color': {
+                            'field': 'modality', 
+                            'type': 'nominal', 
+                            'title': 'Tipo de Transporte',
+                            'scale': {
+                                'domain': get_base_values_by_key('fullname'),
+                                'range': get_base_values_by_key('color')
+                            }
+                        },
+                        'tooltip': [
+                            {'field': 'quantity', 'type': 'quantitative', 'title': 'Total:', 'format': ',.0f'}
+                        ]
+                    },
+                },
+                {
+                    'mark': {
+                        'type': 'tick',
+                        'color': 'red',
+                        'thickness': 2,
+                        'tooltip': {'content': 'data'}
+                    },
+                    'encoding': {
+                        'x': {
+                            'field': 'Dia das Transações', 
+                            'type': 'ordinal'
+                        },
+                        'y': {
+                            'field': 'Média', 
+                            'type': 'quantitative'
+                        },
+                        'tooltip': [
+                            {'field': 'Média', 'title': 'Média do Mês', 'format': ',.0f'}
+                        ]
+                    },
+                },
+            ]
+        })
+        
         
         df = df.drop(columns=['Dia das Transações']).sum()
+        df['Total dessa semana'] = df.drop(labels=['Média']).sum()
+        
         styler = df.to_frame().style.format( thousands = '.')
         
-        print(df.to_frame().columns)
-
         col2.table(styler)
+
+
+
+st.divider() # -------------------------
+
+if 'trans_df' not in st.session_state:
+    st.session_state['trans_df'] = None
+
+if 'subsidy_df' not in st.session_state:
+    st.session_state['subsidy_df'] = None
+
+
+def money_format(quant):
+    return f'R$ {float(quant):,.2f}'.replace(',', '-').replace('.', ',').replace('-', '.')
+
+def enable_button():
+    st.session_state.subsidy_submit_button_enabled = True
+
+def disable_button():
+    st.session_state.subsidy_submit_button_enabled = False
+
+
+
+def get_monetary_sum(dfs, collumn_name):
+    data = {}
+    
+    for i in dfs:
+        try:
+            cdf = dfs[i]
+            
+            series = cdf[collumn_name][cdf[collumn_name].notna()]
+            series = (series*100).astype(int)
+            data[i] = series.sum() / 100
+        except:
+            data[i] = 0
+    
+    return data
+
+def get_daily_column_df_sum(selected_date, column):
+    data = {
+        "Dia das Transações": selected_date
+    }
+    
+    dfs = get_dfs(selected_date)
+    
+    for i in dfs:
+        category_name = bases[i]["fullname"]
+        
+        try:
+            data[ category_name ] = [ dfs[i][column].sum() ]
+        except:
+            data[ category_name ] = [ None ]
+    
+    return pd.DataFrame(data)
+
+def get_columns_sum_in_range(start_date, quant_days, column):
+    data = [None] * quant_days
+    
+    for i in range(quant_days):
+        current_date = start_date + datetime.timedelta(i)
+        
+        data[i] = get_daily_column_df_sum(current_date, column)
+    
+    df = pd.concat(data, axis=0, ignore_index=True)
+    
+    return df
+
+
+def subsidy_change():
+    inputs = st.session_state['subsidy_date']
+    
+    start_date = end_date = None
+    
+    try:
+        (start_date, end_date) = inputs
+    except:
+        return
+    
+    quant_days = (end_date - start_date).days + 1
+
+    df_sub   = get_columns_sum_in_range(start_date, quant_days, 'Vl Subsídio')
+    df_trans = get_columns_sum_in_range(start_date, quant_days, 'Vl Trans')
+    
+    st.session_state['subsidy_df'] = df_sub
+    st.session_state['trans_df']   = df_trans
+
+
+
+#if (st.session_state['trans_df'] is None) | (st.session_state['subsidy_df'] is None):
+#    subsidy_change()
+
+
+with st.container():
+    st.header('Pagamento de subsídio no período')
+
+    st.date_input(
+        "Selecione um dia da semana que deseja analisar",
+        (datetime.date(2025, 8, 5), datetime.date(2025, 8, 7)),
+        min_value = datetime.date(2025, 5, 1),
+        max_value = datetime.datetime.today(),
+        key = 'subsidy_date',
+        on_change = subsidy_change
+    )
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    trans_df = st.session_state['trans_df']
+    trans_df = trans_df.drop(columns=["Dia das Transações"]).sum()
+    
+    total_trans = trans_df.sum()
+    
+    
+    subsidy_df = st.session_state['subsidy_df']
+    subsidy_df = subsidy_df.drop(columns=["Dia das Transações"]).sum()
+    
+    total_subsidy = subsidy_df.sum()
+    
+    all_dic = {
+        "Origem": ["Transporte", "Subsídio"],
+        "value": [total_trans, total_subsidy]
+    }
+    
+    all_df = pd.DataFrame(all_dic)
+    
+    all_df['Valor Total'] = all_df["value"].map(money_format)
+    
+    col1.vega_lite_chart(all_df, {
+        "mark": {"type": "arc", "innerRadius": 60},
+        "title": "Proporção Transporte/Subsídio",
+        "encoding": {
+            "theta": {"field": "value", "type": "quantitative"},
+            "color": {"field": "Origem", "type": "nominal"},
+            "tooltip": [{"field": "Origem"}, {"field": "Valor Total"}]
+        }
+    }, use_container_width=True)
+
+    trans_df = trans_df.reset_index(name='value').rename(columns={'index': 'Categoria'})
+    trans_df['Valor Total'] = trans_df['value'].map(money_format)
+    
+    subsidy_df = subsidy_df.reset_index(name='value').rename(columns={'index': 'Categoria'})
+    subsidy_df['Valor Total'] = subsidy_df['value'].map(money_format)
+    
+    col2.vega_lite_chart(trans_df, {
+        "mark": {"type": "arc", "innerRadius": 60},
+        "title": "Proporção BU-BE-Gratuidade no Transporte",
+        "encoding": {
+            "theta": {"field": "value", "type": "quantitative"},
+            "color": {"field": "Categoria", "type": "nominal"},
+            "tooltip": [{"field": "Categoria"}, {"field": "Valor Total"}]
+        }
+    }, use_container_width=True)
+    
+    col3.vega_lite_chart(subsidy_df, {
+        "mark": {"type": "arc", "innerRadius": 60},
+        "title": "Proporção BU-BE-Gratuidade no Subsídio",
+        "encoding": {
+            "theta": {"field": "value", "type": "quantitative"},
+            "color": {"field": "Categoria", "type": "nominal"},
+            "tooltip": [{"field": "Categoria"}, {"field": "Valor Total"}]
+        }
+    }, use_container_width=True)
 
 
 
@@ -267,166 +488,3 @@ st.divider() # -------------------------
 2. Padronização dos arquivos
 3. Clareza sobre as informações
 '''
-
-
-
-st.divider() # -------------------------
-
-if 'trans_df' not in st.session_state:
-    st.session_state['trans_df'] = None
-
-if 'subsidy_df' not in st.session_state:
-    st.session_state['subsidy_df'] = None
-
-if 'subsidy_first_date' not in st.session_state:
-    st.session_state['subsidy_first_date'] = datetime.date(2025, 8, 5)
-
-if 'subsidy_sec_date' not in st.session_state:
-    st.session_state['subsidy_sec_date'] = datetime.date(2025, 8, 12)
-
-
-
-def money_format(quant):
-    return f'R$ {float(quant):,.2f}'.replace(',', '-').replace('.', ',').replace('-', '.')
-
-def enable_button():
-    st.session_state.subsidy_submit_button_enabled = True
-
-def disable_button():
-    st.session_state.subsidy_submit_button_enabled = False
-
-
-
-def get_monetary_sum(dfs, collumn_name):
-    data = {}
-    
-    for i in dfs:
-        try:
-            cdf = dfs[i]
-            
-            series = cdf[collumn_name][cdf[collumn_name].notna()]
-            series = (series*100).astype(int)
-            data[i] = series.sum() / 100
-        except Exception as e:
-            print('get_monetary_sum:')
-            print(e)
-            
-            print(f'key: {i}')
-            data[i] = 0
-    
-    return data
-
-
-def subsidy_change():
-    first_date = st.session_state['subsidy_first_date']
-    sec_date = st.session_state['subsidy_sec_date']
-    
-    dif = sec_date - first_date
-    
-    data = {
-        'vl_trans': {
-            'Dia das Transações': [None] * (dif.days + 1)
-        },
-        'vl_sub': {
-            'Dia das Transações': [None] * (dif.days + 1)
-        }
-    }
-    
-    for j in bases:
-        data['vl_trans'][j] = [None] * (dif.days + 1)
-        data['vl_sub'][j] = [None] * (dif.days + 1)
-    
-    for i in range(dif.days + 1):
-        current_day = first_date + datetime.timedelta(i)
-        dfs = get_dfs(current_day)
-        
-        data['vl_trans']['Dia das Transações'][i] = f'{current_day.day}/{current_day.month}'
-        data['vl_sub']['Dia das Transações'][i]   = f'{current_day.day}/{current_day.month}'
-        
-        for j in dfs:
-            data['vl_trans'][j][i] = get_monetary_sum( dfs, 'Vl Trans')[j]
-            data['vl_sub'][j][i]   = get_monetary_sum( dfs, 'Vl Subsídio')[j]
-    
-    st.session_state['trans_df']   = pd.DataFrame( data['vl_trans'] )
-    st.session_state['subsidy_df'] = pd.DataFrame( data['vl_sub'] )
-    disable_button()
-
-
-if (st.session_state['trans_df'] is None) | (st.session_state['subsidy_df'] is None):
-    subsidy_change()
-
-if 'subsidy_submit_button_enabled' not in st.session_state:
-    st.session_state.subsidy_submit_button_enabled = True
-
-
-with st.container():
-    st.header('Pagamento de subsídio no período')
-    
-    col1, col2, col3 = st.columns([2, 2, 1])
-
-    first_day = col1.date_input(
-        "Selecione um dia da semana que deseja analisar",
-        value = datetime.date(2025, 8, 1),
-        min_value = datetime.date(2025, 5, 1),
-        max_value = st.session_state['subsidy_sec_date'],
-        key='subsidy_first_date',
-        on_change=enable_button
-    )
-    
-    last_day = col2.date_input(
-        "Selecione um dia da semana que deseja analisar",
-        value = datetime.date(2025, 8, 5),
-        min_value = st.session_state['subsidy_first_date'],
-        max_value = datetime.datetime.today(),
-        key='subsidy_sec_date',
-        on_change=enable_button
-    )
-    
-    submit = col3.button(
-        "Calcular",
-        on_click = subsidy_change,
-        disabled = not st.session_state.subsidy_submit_button_enabled
-    )
-    
-    
-    
-    trans_df   = st.session_state['trans_df']
-    subsidy_df = st.session_state['subsidy_df']
-    
-    total_trans   = trans_df.drop(columns=['Dia das Transações']).sum()
-    total_subsidy = subsidy_df.drop(columns=['Dia das Transações']).sum()
-    
-    for i in total_trans.index:
-        total_trans = total_trans.rename(index={i: f'Transporte {bases[i]["fullname"]}'})
-        total_subsidy = total_subsidy.rename(index={i: f'Subsídio {bases[i]["fullname"]}'})
-    
-    compare_df = pd.concat([total_trans, total_subsidy]).reset_index().rename(columns={0: 'value', 'index': 'Categoria'})
-
-    for i in range(len(compare_df)):
-        compare_df.loc[i, 'Valor Total'] = money_format(compare_df.loc[i, 'value'])
-    
-    col1, col2 = st.columns([1, 1])
-    
-    col1.vega_lite_chart(compare_df, {
-        "mark": {"type": "arc", "innerRadius": 60},
-        "encoding": {
-            "theta": {"field": "value", "type": "quantitative"},
-            "color": {"field": "Categoria", "type": "nominal"},
-            "tooltip": [{"field": "Categoria"}, {"field": "Valor Total"}]
-        }
-    }, use_container_width=True)
-    
-    
-    df = pd.Series( map(money_format, [total_trans.sum(), total_subsidy.sum(), total_trans.sum() + total_subsidy.sum()]), ['Somatório Transporte', 'Somatório Subsídio', 'Arrecadação Total'])
-    
-    col2.table(df)  
-    
-    '''
-    
-    ### Próximos passos:
-    - Fazer o somatório por coluna
-    - Colocar no gráfico circular, deixando as cores do transporte próximas entre si, e diferentes das de subsídio
-    - Mudar o gráfico do semanal para aquele que possui as linhas para média, que por enquanto são apenas supostos
-    '''
-
-
