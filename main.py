@@ -10,10 +10,9 @@ st.set_page_config(
 
 pg = st.navigation([
     st.Page("inicio.py", icon="👋", title="Introdução"),
-    st.Page("processamento.py", title="Analise de Dados"),
-    st.Page("input.py", title="Insercao de Arquivos"),
-    st.Page("novosgraficos.py", title="Customizacao de Graficos"),
-    st.Page("main.py", title="Main")
+    st.Page("weekly-analysis.py", icon="📊", title="Análise Semanal e Diária"),
+    st.Page("custom-analysis.py", icon="🧮", title="Análise Customizável"),
+    st.Page("novosgraficos.py", title="Testes")
 ])
 
 

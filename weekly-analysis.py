@@ -5,14 +5,7 @@ import datetime
 from processing import *
 from visuals import *
 
-st.title("Transporte Inteligente")
-st.caption("Um protótipo da ferramenta de exibição das informações sobre o Sistema de Bilhetagem Eletrônica do Estado do Rio de Janeiro")
-
-st.warning(":warning:  Nessa versão é possível verificar apenas informações referentes ao mês de agosto de 2025.")
-
 # ===================================== WEEKLY =====================================
-
-st.divider() # -------------------------
 
 init_variable("weekly_df", None)
 init_variable("weekly_date", datetime.date(2025, 8, 5))
