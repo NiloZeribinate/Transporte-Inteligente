@@ -1,12 +1,6 @@
 import streamlit as st
-st.set_page_config(
-    page_title="Oi!",
-    page_icon="👋",
-)
 
 st.write("# Bem vindo! 👋")
-
-st.sidebar.success("Selecione por onde comecar")
 
 st.markdown(
     """
@@ -19,3 +13,13 @@ st.markdown(
     -Conjugada ao calendário
 """
 )
+
+st.divider() # -------------------------
+
+'''
+### Pontos de Melhoria da Disposição dos Dados
+
+1. Separação das informações pela Data da Transação
+2. Padronização dos arquivos
+3. Clareza sobre as informações
+'''
