@@ -8,12 +8,18 @@ from visuals import *
 # ===================================== WEEKLY =====================================
 
 init_variable("weekly_date", datetime.date(2025, 8, 5))
+init_variable("last_sunday", None)
 
 def weekly_change():
     selected_date = st.session_state['weekly_date']
     
     last_sunday = selected_date - datetime.timedelta( selected_date.weekday() + 1 )
     
+    if last_sunday == st.session_state['last_sunday']:
+        return
+    else:
+        st.session_state['last_sunday'] = last_sunday
+
     data = get_transaction_counts_in_range(last_sunday, 7)
 
     data['Média'] = [1300000, 3200000, 3300000, 2900000, 2800000, 2600000, 1300000]
@@ -101,10 +107,6 @@ def daily_change():
     merge = merge_hourly_date(daily_chart_data)
     
     st.session_state['hourly_df'] = merge
-
-
-if st.session_state['hourly_df'] is None:
-    daily_change()
 
 with st.container():
     st.header("Balanço Diário")
