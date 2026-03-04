@@ -5,102 +5,10 @@ import datetime
 from processing import *
 from visuals import *
 
-# ===================================== WEEKLY =====================================
-
-init_variable("weekly_date", datetime.date(2025, 8, 5))
-init_variable("last_sunday", None)
-
-def weekly_change():
-    selected_date = st.session_state['weekly_date']
-    
-    last_sunday = selected_date - datetime.timedelta( selected_date.weekday() + 1 )
-    
-    if last_sunday == st.session_state['last_sunday']:
-        return
-    else:
-        st.session_state['last_sunday'] = last_sunday
-
-    data = get_transaction_counts_in_range(last_sunday, 7)
-
-    data['Média'] = [1300000, 3200000, 3300000, 2900000, 2800000, 2600000, 1300000]
-    
-    st.session_state['weekly_df'] = data
-
-with st.container():
-    st.header("Balanço Semanal")
-
-    load_functions('weekly_df', weekly_change)
-
-    selected_week_day = st.date_input(
-        "Selecione um dia da semana que deseja analisar",
-        min_value = datetime.date(2025, 4, 1),
-        max_value = datetime.datetime.today(),
-        on_change = weekly_change,
-        key = 'weekly_date'
-    )
-    
-    df = st.session_state['weekly_df']
-
-    daily_count_chart(df)
-
-
-# ===================================== SUBSIDY =====================================
-
-
-
-st.divider() # -------------------------
-
-init_variable("subsidy_date", (datetime.date(2025, 8, 5), datetime.date(2025, 8, 7)))
-
-def subsidy_change():
-    inputs = st.session_state['subsidy_date']
-    
-    start_date = end_date = None
-    
-    try:
-        (start_date, end_date) = inputs
-    except:
-        return
-    
-    quant_days = (end_date - start_date).days + 1
-
-    df_sub   = get_columns_sum_in_range(start_date, quant_days, 'Vl Subsídio')
-    df_trans = get_columns_sum_in_range(start_date, quant_days, 'Vl Trans')
-    
-    st.session_state['subsidy_df'] = df_sub
-    st.session_state['trans_df']   = df_trans
-
-
-with st.container():
-    st.header('Pagamento de subsídio no período')
-
-    load_functions(['trans_df', 'subsidy_df'], subsidy_change)
-
-    st.date_input(
-        "Selecione um dia da semana que deseja analisar",
-        min_value = datetime.date(2025, 5, 1),
-        max_value = datetime.datetime.today(),
-        on_change = subsidy_change,
-        key = 'subsidy_date'
-    )
-
-    trans_df = st.session_state['trans_df']
-    subsidy_df = st.session_state['subsidy_df']
-
-    subsidy_charts(trans_df, subsidy_df)
-
-
-
-# ===================================== DAILY =====================================
-
-st.divider() # -------------------------
-
-init_variable("daily_date", datetime.date(2025, 8, 1))
-
 def daily_change():
     merge = None
 
-    selected_date = st.session_state['daily_date']
+    selected_date = st.session_state['selected_date']
     
     dfs = get_dfs(selected_date)
     daily_chart_data = get_hourly_groups(dfs, selected_date)
@@ -108,20 +16,105 @@ def daily_change():
     
     st.session_state['hourly_df'] = merge
 
+
+init_variable('last_sunday_weekly', None)
+init_variable('last_sunday_subsidy', None)
+
+
+def weekly_change():
+    selected_date = st.session_state['selected_date']
+    
+    last_sunday = selected_date - datetime.timedelta( selected_date.weekday() + 1 )
+    
+    if last_sunday == st.session_state['last_sunday_weekly']:
+        return
+    else:
+        st.session_state['last_sunday_weekly'] = last_sunday
+
+    data = get_transaction_counts_in_range(last_sunday, 7)
+
+    data['Média'] = [1300000, 3200000, 3300000, 2900000, 2800000, 2600000, 1300000]
+    
+    st.session_state['weekly_df'] = data
+
+
+def subsidy_change():
+    selected_date = st.session_state['selected_date']
+    
+
+    last_sunday = selected_date - datetime.timedelta( selected_date.weekday() + 1 )
+    
+    if last_sunday == st.session_state['last_sunday_subsidy']:
+        return
+    else:
+        st.session_state['last_sunday_subsidy'] = last_sunday
+
+    df_sub   = get_columns_sum_in_range(selected_date, 7, 'Vl Subsídio')
+    df_trans = get_columns_sum_in_range(selected_date, 7, 'Vl Trans')
+    
+    print('Aqui')
+
+    st.session_state['subsidy_df'] = df_sub
+    st.session_state['trans_df']   = df_trans
+
+
+def change():
+    daily_change()
+    weekly_change()
+    subsidy_change()
+
+
+
+init_variable('selected_date', datetime.date(2025, 8, 5))
+
+with st.container():
+    st.title('Analise Semanal e Diaria')
+
+    selected_week_day = st.date_input(
+        'Selecione um dia da semana que deseja analisar',
+        min_value = datetime.date(2025, 4, 1),
+        max_value = datetime.datetime.today(),
+        on_change = change,
+        key = 'selected_date'
+    )
+
+
+# ===================================== DAILY =====================================
+
 with st.container():
     st.header("Balanço Diário")
     
     load_functions('hourly_df', daily_change)
-
-    selected_date = st.date_input(
-        "Selecione o dia que deseja analisar",
-        min_value = datetime.date(2025, 5, 1),
-        max_value = datetime.datetime.today(),
-        on_change = daily_change,
-        key='daily_date'
-    )
     
     df = st.session_state['hourly_df']
 
     hourly_chart(df)
+
+st.divider() # -------------------------
+
+# ===================================== WEEKLY =====================================
+
+with st.container():
+    st.header('Balanço da Semana')
+
+    load_functions('weekly_df', weekly_change)
+    
+    df = st.session_state['weekly_df']
+
+    daily_count_chart(df)
+
+st.divider() # -------------------------
+
+# ===================================== SUBSIDY =====================================
+
+
+with st.container():
+    st.header('Pagamento de subsídio na semana')
+
+    load_functions(['trans_df', 'subsidy_df'], subsidy_change)
+
+    trans_df = st.session_state['trans_df']
+    subsidy_df = st.session_state['subsidy_df']
+
+    subsidy_charts(trans_df, subsidy_df)
 
