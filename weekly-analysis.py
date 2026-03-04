@@ -7,11 +7,7 @@ from visuals import *
 
 # ===================================== WEEKLY =====================================
 
-init_variable("weekly_df", None)
 init_variable("weekly_date", datetime.date(2025, 8, 5))
-
-if 'weekly_df' not in st.session_state:
-    st.session_state['weekly_df'] = None
 
 def weekly_change():
     selected_date = st.session_state['weekly_date']
@@ -24,19 +20,17 @@ def weekly_change():
     
     st.session_state['weekly_df'] = data
 
-if st.session_state['weekly_df'] is None:
-    weekly_change()
-
-
 with st.container():
     st.header("Balanço Semanal")
-    
+
+    load_functions('weekly_df', weekly_change)
+
     selected_week_day = st.date_input(
         "Selecione um dia da semana que deseja analisar",
         min_value = datetime.date(2025, 4, 1),
         max_value = datetime.datetime.today(),
         on_change = weekly_change,
-        key='weekly_date'
+        key = 'weekly_date'
     )
     
     df = st.session_state['weekly_df']
@@ -71,24 +65,21 @@ def subsidy_change():
     st.session_state['trans_df']   = df_trans
 
 
-
-if ('trans_df' or 'subsidy_df') not in st.session_state:
-    subsidy_change()
-
-
-trans_df = st.session_state['trans_df']
-subsidy_df = st.session_state['subsidy_df']
-
 with st.container():
     st.header('Pagamento de subsídio no período')
+
+    load_functions(['trans_df', 'subsidy_df'], subsidy_change)
 
     st.date_input(
         "Selecione um dia da semana que deseja analisar",
         min_value = datetime.date(2025, 5, 1),
         max_value = datetime.datetime.today(),
-        key = 'subsidy_date',
-        on_change = subsidy_change
+        on_change = subsidy_change,
+        key = 'subsidy_date'
     )
+
+    trans_df = st.session_state['trans_df']
+    subsidy_df = st.session_state['subsidy_df']
 
     subsidy_charts(trans_df, subsidy_df)
 
@@ -98,7 +89,6 @@ with st.container():
 
 st.divider() # -------------------------
 
-init_variable("hourly_df", None)
 init_variable("daily_date", datetime.date(2025, 8, 1))
 
 def daily_change():
@@ -116,9 +106,10 @@ def daily_change():
 if st.session_state['hourly_df'] is None:
     daily_change()
 
-
 with st.container():
     st.header("Balanço Diário")
+    
+    load_functions('hourly_df', daily_change)
 
     selected_date = st.date_input(
         "Selecione o dia que deseja analisar",

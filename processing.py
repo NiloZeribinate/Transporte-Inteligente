@@ -44,6 +44,15 @@ def init_variable(var, value):
     if var not in st.session_state:
         st.session_state[var] = value
 
+def load_functions(vars, func):
+    if type(vars) == str:
+        vars = [vars] 
+
+    for i in vars:
+        if i not in st.session_state or st.session_state[i] is None:
+            with st.spinner("Carregando dados...", show_time = True):
+                func()
+
 # ========================= WEEKLY =========================
 
 def get_dfs(selected_date):
@@ -88,12 +97,12 @@ def get_daily_transaction_counts(selected_date):
     dfs = get_dfs(selected_date)
     
     for i in dfs:
-        column_name = bases[i]["fullname"]
+        column_name = bases[i]['fullname']
         
         try:
-            data[ column_name ] = [ dfs[i]['Linha'].count() ]
+            data[column_name] = [dfs[i]['Linha'].count()]
         except:
-            data[ column_name ] = [ None ]
+            data[column_name] = [None]
     
     return pd.DataFrame(data)
     
