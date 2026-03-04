@@ -12,7 +12,8 @@ pg = st.navigation([
     st.Page("inicio.py", icon="👋", title="Introdução"),
     st.Page("weekly-analysis.py", icon="📊", title="Análise Semanal e Diária"),
     st.Page("custom-analysis.py", icon="🧮", title="Análise Customizável"),
-    st.Page("novosgraficos.py", title="Testes")
+    st.Page("novosgraficos.py", title="Testes"),
+    st.Page("input.py",title="Inserir Novos Arquivos")
 ])
 
 
@@ -27,13 +28,13 @@ if 'bases' not in st.session_state :
         'be': {
             'dir': 'org-BE/',
             'pref': 'be_',
-            'dayfirst': False,
+            'dayfirst': True,
             'fullname': 'Bilhetagem Eletrônica'
         },
         'bu': {
             'dir': 'diario/org/',
             'pref': 'bu_',
-            'dayfirst': False,
+            'dayfirst': True,
             'fullname': 'Bilhete Único'
         },
         'gt': {

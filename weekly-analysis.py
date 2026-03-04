@@ -9,11 +9,9 @@ def daily_change():
     merge = None
 
     selected_date = st.session_state['selected_date']
-    
     dfs = get_dfs(selected_date)
     daily_chart_data = get_hourly_groups(dfs, selected_date)
     merge = merge_hourly_date(daily_chart_data)
-    
     st.session_state['hourly_df'] = merge
 
 
