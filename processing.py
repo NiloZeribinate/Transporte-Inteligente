@@ -84,7 +84,7 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
             if 'Vl Subsídio' in data[key].columns:
                 data[key]['Vl Subsídio'] = (data[key]['Vl Subsídio'].str.replace(',', '.')).astype(float)
         else:
-            print("Nao encontrado:", nome_final)
+            st.write("Nao encontrado:" ,nome_final)
             data[key] = None
     
     return data
@@ -171,7 +171,7 @@ def get_hourly_groups(dfs, selected_date):
     
     for key in bases:
         try:
-            if dfs[key].empty or dfs[key]==None:
+            if dfs[key] is None or dfs[key].empty:
                 data[key] = None
                 continue
             
