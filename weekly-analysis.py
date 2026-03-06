@@ -50,7 +50,6 @@ def subsidy_change():
     df_sub   = get_columns_sum_in_range(selected_date, 7, 'Vl Subsídio')
     df_trans = get_columns_sum_in_range(selected_date, 7, 'Vl Trans')
     
-    print('Aqui')
 
     st.session_state['subsidy_df'] = df_sub
     st.session_state['trans_df']   = df_trans

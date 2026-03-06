@@ -72,12 +72,17 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
         file = encontrar_arquivo(nome_final)
         if file is not None:
             file.seek(0) #se ele ler o mesmo arquivo mais de uma vez, como file eh um tipo *FILE, tem que resetar o ponteiro pro inicio do arquivo
-            data[key] = pd.read_csv(
-                file,
-                sep=';',
-                dayfirst=st.session_state.bases[key]['dayfirst'],
-                parse_dates=['Data da Transação', 'Data do Processamento'],
-            )
+            try:
+                data[key] = pd.read_csv(
+                    file,
+                    sep=';',
+                    dayfirst=st.session_state.bases[key]['dayfirst'],
+                    parse_dates=['Data da Transação', 'Data do Processamento'],
+                )
+            except Exception as e:
+                print(e)
+                print(nome_final)
+                st.stop()
             if 'Vl Trans' in data[key].columns:
                 data[key]['Vl Trans'] = (data[key]['Vl Trans'].str.replace(',', '.')).astype(float)
 
@@ -194,16 +199,21 @@ def merge_hourly_date(hourly_groups):
     
     for key in bases:
         try:
-            merge = pd.merge(merge, hourly_groups[key], on='Data da Transação', how='outer') if (merge is not None) else hourly_groups[key]
+            if merge is not None:
+                merge = pd.merge(merge, hourly_groups[key], on='Data da Transação', how='outer')
+            else:
+                merge=hourly_groups[key]
         except Exception as e:
-            print('merge_hourly_date 01:')
+            print('merge_hourly_date 01:') #??? porque isso aconteceria
             print(e)
+            print(key)
     
     try:
         merge['Data da Transação'] = merge['Data da Transação'].dt.hour
         merge = merge.rename(columns={'Data da Transação': 'Horário da Transação'})
     except Exception as e:
-        print('merge_hourly_date 02:')
+        print('merge_hourly_date 02:') # ??????
         print(e)
+        print(key)
     
     return merge
