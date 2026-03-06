@@ -47,8 +47,8 @@ def subsidy_change():
     else:
         st.session_state['last_sunday_subsidy'] = last_sunday
 
-    df_sub   = get_columns_sum_in_range(selected_date, 7, 'Vl Subsídio')
-    df_trans = get_columns_sum_in_range(selected_date, 7, 'Vl Trans')
+    df_sub   = get_columns_sum_in_range(last_sunday, 7, 'Vl Subsídio')
+    df_trans = get_columns_sum_in_range(last_sunday, 7, 'Vl Trans')
     
 
     st.session_state['subsidy_df'] = df_sub

@@ -81,8 +81,7 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
                 )
             except Exception as e:
                 print(e)
-                print(nome_final)
-                st.stop()
+                st.write(nome_final)
             if 'Vl Trans' in data[key].columns:
                 data[key]['Vl Trans'] = (data[key]['Vl Trans'].str.replace(',', '.')).astype(float)
 
