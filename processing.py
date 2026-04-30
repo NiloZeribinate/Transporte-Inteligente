@@ -78,7 +78,12 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
                     sep=';',
                     dayfirst=st.session_state.bases[key]['dayfirst'],
                     parse_dates=['Data da Transação', 'Data do Processamento'],
+                    dtype={
+                        'Escola': 'string',
+                        'Nº Censo Escola': 'string'  # or 'Int64' if truly numeric
+                    }
                 )
+                # print(data[key].dtypes)
             except Exception as e:
                 print(e)
                 st.write(nome_final)
@@ -197,6 +202,9 @@ def merge_hourly_date(hourly_groups):
     merge = None
     
     for key in bases:
+        df = hourly_groups.get(key)
+        if df is None:
+            continue
         try:
             if merge is not None:
                 merge = pd.merge(merge, hourly_groups[key], on='Data da Transação', how='outer')
