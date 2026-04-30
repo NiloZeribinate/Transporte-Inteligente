@@ -80,8 +80,8 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
                     parse_dates=['Data da Transação', 'Data do Processamento'],
                     dtype={
                         'Escola': 'string',
-                        'Nº Censo Escola': 'string'  # or 'Int64' if truly numeric
-                    }
+                        'Nº Censo Escola': 'string'  # or 'Int64' if truly numeric 
+                    } #se ainda der errado, colocar low_memory=False, mas deu certo com isso
                 )
                 # print(data[key].dtypes)
             except Exception as e:
@@ -204,7 +204,7 @@ def merge_hourly_date(hourly_groups):
     for key in bases:
         df = hourly_groups.get(key)
         if df is None:
-            continue
+            continue #se hourly_groups[key] n existir, n tem pra que adicionar um null 
         try:
             if merge is not None:
                 merge = pd.merge(merge, hourly_groups[key], on='Data da Transação', how='outer')
