@@ -8,10 +8,10 @@ def daily_count_chart(df):
 		col1, col2 = st.columns([3,1])
         
 		long_df = df.melt(
-            id_vars    = ['Dia das Transações', 'Média'],
-            value_vars = df.drop(columns=['Dia das Transações']).columns.array,
-            var_name   = 'modality',
-            value_name = 'quantity'
+            id_vars    = ['Dia das Transações', 'Média'], #o que vai ser os identificadores, vai ficar fixo
+            value_vars = df.drop(columns=['Dia das Transações']).columns.array, #o que vai ser uma nova linha 
+            var_name   = 'modality', #o nome do variavel, que no caso vai ser as linhas
+            value_name = 'quantity' #o nome do value(do header da coluna onde vai ficar a quantidade)
         )
     
 		col1.vega_lite_chart(long_df, {
@@ -116,7 +116,7 @@ def subsidy_charts(trans_df, subsidy_df):
             "color": {"field": "Origem", "type": "nominal"},
             "tooltip": [{"field": "Origem"}, {"field": "Valor Total"}]
         }
-    }, use_container_width=True)
+    },  width='stretch')
     
 	col2.vega_lite_chart(trans_series, {
         "mark": {"type": "arc", "innerRadius": 60},
@@ -126,7 +126,7 @@ def subsidy_charts(trans_df, subsidy_df):
             "color": {"field": "Categoria", "type": "nominal"},
             "tooltip": [{"field": "Categoria"}, {"field": "Valor Total"}]
         }
-    }, use_container_width=True)
+    },  width='stretch')
     
 	col3.vega_lite_chart(subsidy_series, {
         "mark": {"type": "arc", "innerRadius": 60},
@@ -136,7 +136,7 @@ def subsidy_charts(trans_df, subsidy_df):
             "color": {"field": "Categoria", "type": "nominal"},
             "tooltip": [{"field": "Categoria"}, {"field": "Valor Total"}]
         }
-    }, use_container_width=True)
+    },  width='stretch')
 
 
 
@@ -145,7 +145,7 @@ def hourly_chart(df):
     if df is not None:
         col1, col2 = st.columns([3,1])
 
-        col1.bar_chart(df, x='Horário da Transação', x_label='Horário', y_label='Quantidade de Transações', use_container_width=True)
+        col1.bar_chart(df, x='Horário da Transação', x_label='Horário', y_label='Quantidade de Transações', width='stretch')
         
         
         df = df.drop(columns=['Horário da Transação']).sum().astype(int)

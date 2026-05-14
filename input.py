@@ -18,3 +18,6 @@ st.markdown(
     - Gratuidade --> refixo 'gt_', com o dayfirst=False
 """
 ) #manter padrao de nome de arquivo, em vez de padronizar diretorio
+
+st.write("Arquivos carregados:")
+st.write(list(st.session_state.arquivos.keys()))

@@ -54,37 +54,46 @@ def load_functions(vars, func):
                 func()
 
 # ========================= WEEKLY =========================
+def encontrar_arquivo(nome_final):
+    for nome_real in st.session_state.arquivos:
+        if nome_real.endswith(nome_final):
+            return st.session_state.arquivos[nome_real]
+    return None
 
-def get_dfs(selected_date):
+def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que adaptada pra qualquer diretorio
     data = {}
     
-    for key in bases:
-        filename = (
-            root_path
-            + data_path
-            + bases[key]['dir']
-            + bases[key]['pref']
+    for key in st.session_state.bases:
+        nome_final = (
+            st.session_state.bases[key]['pref']
             + f'{selected_date.year}-{selected_date.month:02d}-{selected_date.day:02d}.csv'
         )
-        
-        try:
-            data[key] = pd.read_csv(
-                filename,
-                sep=';',
-                dayfirst = bases[key]['dayfirst'],
-                parse_dates = ['Data da Transação', 'Data do Processamento'],
-                low_memory = False
-            )
 
+        file = encontrar_arquivo(nome_final)
+        if file is not None:
+            file.seek(0) #se ele ler o mesmo arquivo mais de uma vez, como file eh um tipo *FILE, tem que resetar o ponteiro pro inicio do arquivo
+            try:
+                data[key] = pd.read_csv(
+                    file,
+                    sep=';',
+                    dayfirst=st.session_state.bases[key]['dayfirst'],
+                    parse_dates=['Data da Transação', 'Data do Processamento'],
+                    dtype={
+                        'Escola': 'string',
+                        'Nº Censo Escola': 'string'  # or 'Int64' if truly numeric 
+                    } #se ainda der errado, colocar low_memory=False, mas deu certo com isso
+                )
+                # print(data[key].dtypes)
+            except Exception as e:
+                print(e)
+                st.write(nome_final)
             if 'Vl Trans' in data[key].columns:
                 data[key]['Vl Trans'] = (data[key]['Vl Trans'].str.replace(',', '.')).astype(float)
 
             if 'Vl Subsídio' in data[key].columns:
                 data[key]['Vl Subsídio'] = (data[key]['Vl Subsídio'].str.replace(',', '.')).astype(float)
-        
-        except Exception as e:
-            print('\nget_dfs:')
-            print(e)
+        else:
+            st.write("Nao encontrado:" ,nome_final)
             data[key] = None
     
     return data
@@ -93,7 +102,6 @@ def get_daily_transaction_counts(selected_date):
     data = {
         'Dia das Transações': [ selected_date ]
     }
-    
     dfs = get_dfs(selected_date)
     
     for i in dfs:
@@ -129,21 +137,19 @@ def get_monetary_sum(dfs, collumn_name):
         try:
             cdf = dfs[i]
             
-            series = cdf[collumn_name][cdf[collumn_name].notna()]
-            series = (series*100).astype(int)
-            data[i] = series.sum() / 100
+            series = cdf[collumn_name][cdf[collumn_name].notna()] #remove valores nulos
+            series = (series*100).astype(int) #multiplica tudo por 100
+            data[i] = series.sum() / 100 #divide(pra fazer as operacoes com centavo tudo certo)
         except:
             data[i] = 0
     
-    return data
+    return data #retorna soma de dinheiro de certa coluna
 
 def get_daily_column_df_sum(selected_date, column):
     data = {
         "Dia das Transações": selected_date
     }
-    
     dfs = get_dfs(selected_date)
-    
     for i in dfs:
         category_name = bases[i]["fullname"]
         
@@ -152,7 +158,7 @@ def get_daily_column_df_sum(selected_date, column):
         except:
             data[ category_name ] = [ None ]
     
-    return pd.DataFrame(data)
+    return pd.DataFrame(data) #retorna df com soma de uma certa coluna em uma data selecionada
 
 def get_columns_sum_in_range(start_date, quant_days, column):
     data = [None] * quant_days
@@ -164,7 +170,7 @@ def get_columns_sum_in_range(start_date, quant_days, column):
     
     df = pd.concat(data, axis=0, ignore_index=True)
     
-    return df
+    return df #retorna df com soma de certa coluna em um espaco de tempo
 
 
 # ========================= DAILY =========================
@@ -174,7 +180,7 @@ def get_hourly_groups(dfs, selected_date):
     
     for key in bases:
         try:
-            if dfs[key].empty:
+            if dfs[key] is None or dfs[key].empty:
                 data[key] = None
                 continue
             
@@ -196,18 +202,26 @@ def merge_hourly_date(hourly_groups):
     merge = None
     
     for key in bases:
+        df = hourly_groups.get(key)
+        if df is None:
+            continue #se hourly_groups[key] n existir, n tem pra que adicionar um null 
         try:
-            merge = pd.merge(merge, hourly_groups[key], on='Data da Transação', how='outer') if (merge is not None) else hourly_groups[key]
+            if merge is not None:
+                merge = pd.merge(merge, hourly_groups[key], on='Data da Transação', how='outer')
+            else:
+                merge=hourly_groups[key]
         except Exception as e:
-            print('merge_hourly_date 01:')
+            print('merge_hourly_date 01:') #??? porque isso aconteceria
             print(e)
+            print(key)
     
     try:
         merge['Data da Transação'] = merge['Data da Transação'].dt.hour
         merge = merge.rename(columns={'Data da Transação': 'Horário da Transação'})
     except Exception as e:
-        print('merge_hourly_date 02:')
+        print('merge_hourly_date 02:') # ??????
         print(e)
+        print(key)
     
     return merge
 

@@ -9,11 +9,9 @@ def daily_change():
     merge = None
 
     selected_date = st.session_state['selected_date']
-    
     dfs = get_dfs(selected_date)
     daily_chart_data = get_hourly_groups(dfs, selected_date)
     merge = merge_hourly_date(daily_chart_data)
-    
     st.session_state['hourly_df'] = merge
 
 
@@ -49,8 +47,14 @@ def subsidy_change():
     else:
         st.session_state['last_sunday_subsidy'] = last_sunday
 
+<<<<<<< HEAD
     df_sub   = get_columns_sum_in_range(selected_date, 7, 'Vl Subsídio')
     df_trans = get_columns_sum_in_range(selected_date, 7, 'Vl Trans')
+=======
+    df_sub   = get_columns_sum_in_range(last_sunday, 7, 'Vl Subsídio')
+    df_trans = get_columns_sum_in_range(last_sunday, 7, 'Vl Trans')
+    
+>>>>>>> 1c53358334feb6d7e9717b59801e13da3483b633
 
     st.session_state['subsidy_df'] = df_sub
     st.session_state['trans_df']   = df_trans
