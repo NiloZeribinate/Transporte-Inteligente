@@ -154,3 +154,28 @@ def hourly_chart(df):
         col2.table(styler)
     else:
         st.warning(':warning: Nenhum dado registrado sobre esse dia.')
+
+
+def line_analysis_charts(df_filtered, selected_line):
+    st.subheader(f"Análise Detalhada: Linha {selected_line}")
+    
+    # Gráfico 1: Passageiros por Modal
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("Passageiros por Modal/Hora")
+        # Preparando dados para o gráfico de barras empilhadas
+        chart_data = df_filtered.melt(id_vars=['Hora'], value_vars=['Bilhete Único', 'Bilhetagem Eletrônica', 'Gratuidade'], 
+                                    var_name='Modal', value_name='Passageiros')
+        st.vega_lite_chart(chart_data, {
+            'mark': 'bar',
+            'encoding': {
+                'x': {'field': 'Hora', 'type': 'ordinal'},
+                'y': {'field': 'Passageiros', 'type': 'quantitative'},
+                'color': {'field': 'Modal', 'type': 'nominal'}
+            }
+        }, use_container_width=True)
+
+    with col2:
+        st.write("Passageiros por Veículo")
+        st.line_chart(df_filtered, x='Hora', y='Passageiros_por_Veiculo', color="#ffaa00")

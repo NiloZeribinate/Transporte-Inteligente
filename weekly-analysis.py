@@ -51,8 +51,6 @@ def subsidy_change():
 
     df_sub   = get_columns_sum_in_range(selected_date, 7, 'Vl Subsídio')
     df_trans = get_columns_sum_in_range(selected_date, 7, 'Vl Trans')
-    
-    print('Aqui')
 
     st.session_state['subsidy_df'] = df_sub
     st.session_state['trans_df']   = df_trans
@@ -89,6 +87,24 @@ with st.container():
     df = st.session_state['hourly_df']
 
     hourly_chart(df)
+
+    st.divider()
+    st.header("Análise por Linha Específica")
+    
+    # Pegamos os DataFrames do dia selecionado
+    current_dfs = get_dfs(st.session_state['selected_date'])
+    lista_linhas = get_unique_lines(current_dfs)
+    
+    if lista_linhas:
+        selected_line = st.selectbox("Selecione a Linha para análise:", options=lista_linhas)
+        
+        # Processa os dados filtrados
+        df_line_stats = get_filtered_hourly_data(current_dfs, selected_line)
+        
+        # Exibe os gráficos
+        line_analysis_charts(df_line_stats, selected_line)
+    else:
+        st.info("Nenhuma linha encontrada para a data selecionada.")
 
 st.divider() # -------------------------
 

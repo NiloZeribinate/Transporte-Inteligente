@@ -17,13 +17,3 @@ st.markdown(
     -Conjugada ao calendário
 """
 )
-
-st.divider() # -------------------------
-
-'''
-### Pontos de Melhoria da Disposição dos Dados
-
-1. Separação das informações pela Data da Transação
-2. Padronização dos arquivos
-3. Clareza sobre as informações
-'''

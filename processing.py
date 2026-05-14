@@ -210,3 +210,44 @@ def merge_hourly_date(hourly_groups):
         print(e)
     
     return merge
+
+# ========================= PASSAGEIROS =========================
+
+def get_unique_lines(dfs):
+    """Retorna uma lista única de linhas presentes nos DataFrames BE e BU."""
+    lines = set()
+    for key in ['be', 'bu']:
+        if dfs[key] is not None and 'Linha' in dfs[key].columns:
+            lines.update(dfs[key]['Linha'].unique().tolist())
+    return sorted(list(lines))
+
+def get_filtered_hourly_data(dfs, selected_line):
+    """Filtra os dados por linha e calcula passageiros por veículo."""
+    hourly_data = []
+    
+    for hour in range(24):
+        stats = {'Hora': hour, 'BU': 0, 'BE': 0, 'GT': 0, 'Passageiros_Total': 0, 'Veiculos_Unicos': set()}
+        
+        for key in bases:
+            df = dfs[key]
+            if df is not None:
+                # Filtra por linha e hora
+                mask = (df['Linha'] == selected_line) & (df['Data da Transação'].dt.hour == hour)
+                filtered = df[mask]
+                
+                count = len(filtered)
+                stats[bases[key]['fullname']] = count # Mapeia para o nome amigável (Bilhete Único, etc)
+                stats['Passageiros_Total'] += count
+                
+                if 'Nº Carro' in filtered.columns:
+                    stats['Veiculos_Unicos'].update(filtered['Nº Carro'].unique())
+        
+        # Cálculo da média por veículo
+        qtd_veiculos = len(stats['Veiculos_Unicos'])
+        stats['Passageiros_por_Veiculo'] = stats['Passageiros_Total'] / qtd_veiculos if qtd_veiculos > 0 else 0
+        
+        # Limpeza para o DataFrame
+        del stats['Veiculos_Unicos']
+        hourly_data.append(stats)
+        
+    return pd.DataFrame(hourly_data)
