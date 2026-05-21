@@ -26,22 +26,28 @@ if 'arquivos' not in st.session_state:
 if 'bases' not in st.session_state :
     st.session_state.bases={
         'be': {
-            'dir': 'org-BE/',
+            'dir': './org-BE/',
             'pref': 'be_',
-            'dayfirst': True,
-            'fullname': 'Bilhetagem Eletrônica'
+            'dayfirst': False,
+            'fullname': 'Bilhetagem Eletrônica',
+            'color': '#2ca1e7',
+            'suf':'_BE'
         },
         'bu': {
-            'dir': 'diario/org/',
+            'dir': './diario/org/',
             'pref': 'bu_',
-            'dayfirst': True,
-            'fullname': 'Bilhete Único'
+            'dayfirst': False,
+            'fullname': 'Bilhete Único',
+            'color': '#ff6683',
+            'suf':'_BU'
         },
         'gt': {
-            'dir': 'GT/',
+            'dir': './GT/',
             'pref': 'gt_',
-            'dayfirst': False,
-            'fullname': 'Gratuidade'
+            'dayfirst': True,
+            'fullname': 'Gratuidade',
+            'color': '#ffcb61',
+            'suf':'_GT'
         },
     }
 

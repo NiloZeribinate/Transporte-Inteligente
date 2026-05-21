@@ -4,17 +4,16 @@ import pandas as pd
 from processing import *
 
 def daily_count_chart(df):
-	if df is not None and len( df.drop(columns=["Dia das Transações"]).dropna(how='all') ) != 0:
-		col1, col2 = st.columns([3,1])
-        
-		long_df = df.melt(
-            id_vars    = ['Dia das Transações', 'Média'], #o que vai ser os identificadores, vai ficar fixo
-            value_vars = df.drop(columns=['Dia das Transações']).columns.array, #o que vai ser uma nova linha 
-            var_name   = 'modality', #o nome do variavel, que no caso vai ser as linhas
-            value_name = 'quantity' #o nome do value(do header da coluna onde vai ficar a quantidade)
-        )
-    
-		col1.vega_lite_chart(long_df, {
+    if df is not None and len( df.drop(columns=["Dia das Transações"]).dropna(how='all') ) != 0:
+        col1, col2 = st.columns([3,1])
+
+        long_df = df.melt(
+        id_vars    = ['Dia das Transações', 'Média'], #o que vai ser os identificadores, vai ficar fixo
+        value_vars = df.drop(columns=['Dia das Transações','Media']).columns.array, #o que vai ser uma nova linha 
+        var_name   = 'modality', #o nome do variavel, que no caso vai ser as linhas
+        value_name = 'quantity') #o nome do value(do header da coluna onde vai ficar a quantidade))
+        st.write(df.dtypes)
+        col1.vega_lite_chart(long_df, {
             'layer': [
                 {
                     'mark': {
@@ -48,38 +47,38 @@ def daily_count_chart(df):
                 },
 
                 {
-                    'mark': {
-                        'type': 'tick',
-                        'color': 'red',
-                        'thickness': 2,
-                        'tooltip': {'content': 'data'}
-                    },
-                    'encoding': {
-                        'x': {
-                            'field': 'Dia das Transações', 
-                            'type': 'ordinal'
-                        },
-                        'y': {
-                            'field': 'Média', 
-                            'type': 'quantitative'
-                        },
-                        'tooltip': [
-                            {'field': 'Média', 'title': 'Média do Mês', 'format': ',.0f'}
-                        ]
-                    },
+                'mark': {
+                    'type': 'tick',
+                    'color': 'red',
+                    'thickness': 2,
+                    'tooltip': {'content': 'data'}
                 },
-            ]
+                'encoding': {
+                    'x': {
+                        'field': 'Dia das Transações', 
+                        'type': 'ordinal'
+                    },
+                    'y': {
+                        'field': 'Média', 
+                        'type': 'quantitative'
+                    },
+                    'tooltip': [
+                    {'field': 'Média', 'title': 'Média do Mês', 'format': ',.0f'}
+                    ]
+                },
+                },
+                ]
         })
 
-		df_sum = df.drop(columns=['Dia das Transações', 'Média']).sum()
-		df_sum['Total'] = df_sum.sum()
-        
-		styler = df_sum.to_frame().style.format( thousands = '.')
+        df_sum = df.drop(columns=['Dia das Transações', 'Média']).sum()
+        df_sum['Total'] = df_sum.sum()
 
-		col2.table(styler)
+        styler = df_sum.to_frame().style.format( thousands = '.')
 
-	else:
-		st.warning(':warning: Nenhum dado registrado sobre essa semana.')
+        col2.table(styler)
+
+    else:
+        st.warning(':warning: Nenhum dado registrado sobre essa semana.')
 
 
 def subsidy_charts(trans_df, subsidy_df):
@@ -145,10 +144,10 @@ def hourly_chart(df):
     if df is not None:
         col1, col2 = st.columns([3,1])
 
-        col1.bar_chart(df, x='Horário da Transação', x_label='Horário', y_label='Quantidade de Transações', width='stretch')
+        col1.bar_chart(df, x='Hora Transação', x_label='Horário', y_label='Quantidade de Transações', width='stretch')
         
         
-        df = df.drop(columns=['Horário da Transação']).sum().astype(int)
+        df = df.drop(columns=['Hora Transação']).sum().astype(int)
         styler = df.to_frame().style.format( thousands = '.')
         
         col2.table(styler)

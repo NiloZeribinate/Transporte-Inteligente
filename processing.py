@@ -11,21 +11,24 @@ bases = {
 		'pref': 'be_',
 		'dayfirst': True,
 		'fullname': 'Bilhetagem Eletrônica',
-		'color': '#2ca1e7'
+		'color': '#2ca1e7',
+        'suf':'_BE'
 	},
 	'bu': {
 		'dir': './diario/org/',
 		'pref': 'bu_',
 		'dayfirst': True,
 		'fullname': 'Bilhete Único',
-		'color': '#ff6683'
+		'color': '#ff6683',
+        'suf':'_BU'
 	},
 	'gt': {
 		'dir': './GT/',
 		'pref': 'gt_',
 		'dayfirst': False,
 		'fullname': 'Gratuidade',
-		'color': '#ffcb61'
+		'color': '#ffcb61',
+        'suf':'_GT'
 	},
 }
 
@@ -65,8 +68,7 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
     
     for key in st.session_state.bases:
         nome_final = (
-            st.session_state.bases[key]['pref']
-            + f'{selected_date.year}-{selected_date.month:02d}-{selected_date.day:02d}.csv'
+            f"{selected_date.year}-{selected_date.month:02d}-{selected_date.day:02d}{st.session_state.bases[key]['suf']}.csv"
         )
 
         file = encontrar_arquivo(nome_final)
@@ -75,23 +77,25 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
             try:
                 data[key] = pd.read_csv(
                     file,
-                    sep=';',
+                    sep=',',
                     dayfirst=st.session_state.bases[key]['dayfirst'],
                     parse_dates=['Data da Transação', 'Data do Processamento'],
                     dtype={
                         'Escola': 'string',
-                        'Nº Censo Escola': 'string'  # or 'Int64' if truly numeric 
+                        'Nº Censo Escola': 'string',
+                        'Hora Transação': 'Int64'  # or 'Int64' if truly numeric 
                     } #se ainda der errado, colocar low_memory=False, mas deu certo com isso
                 )
                 # print(data[key].dtypes)
             except Exception as e:
                 print(e)
                 st.write(nome_final)
-            if 'Vl Trans' in data[key].columns:
-                data[key]['Vl Trans'] = (data[key]['Vl Trans'].str.replace(',', '.')).astype(float)
-
-            if 'Vl Subsídio' in data[key].columns:
-                data[key]['Vl Subsídio'] = (data[key]['Vl Subsídio'].str.replace(',', '.')).astype(float)
+                data[key]=None
+            if  key in data and data[key] is not None:
+                if 'Vl Trans' in data[key].columns:
+                    data[key]['Vl Trans'] = (data[key]['Vl Trans'].str.replace(',', '.')).astype(float)
+                if 'Vl Subsídio' in data[key].columns:
+                    data[key]['Vl Subsídio'] = (data[key]['Vl Subsídio'].str.replace(',', '.')).astype(float)
         else:
             st.write("Nao encontrado:" ,nome_final)
             data[key] = None
@@ -183,9 +187,8 @@ def get_hourly_groups(dfs, selected_date):
             if dfs[key] is None or dfs[key].empty:
                 data[key] = None
                 continue
-            
-            df = dfs[key].groupby(pd.Grouper(key='Data da Transação', freq='1h'))['Linha'].count().reset_index().rename(columns={'Linha': bases[key]['fullname']})
-            
+
+            df=dfs[key].groupby('Hora Transação').size().reset_index(name=bases[key]['fullname'])
             # A seguinte linha deverá ser deletada após o ajuste no código versão gratuidade, e o código da função daily_change deve ser descomentada, além de retirar o "selected_date" daqui também:
             if(key == 'gt'):
                 df = df[df['Data da Transação'].dt.day == selected_date.day]
@@ -217,7 +220,7 @@ def merge_hourly_date(hourly_groups):
     
     try:
         merge['Data da Transação'] = merge['Data da Transação'].dt.hour
-        merge = merge.rename(columns={'Data da Transação': 'Horário da Transação'})
+        merge = merge.rename(columns={'Data da Transação': 'Hora Transação'})
     except Exception as e:
         print('merge_hourly_date 02:') # ??????
         print(e)
@@ -244,24 +247,25 @@ def get_filtered_hourly_data(dfs, selected_line):
         
         for key in bases:
             df = dfs[key]
+
             if df is not None:
                 # Filtra por linha e hora
-                mask = (df['Linha'] == selected_line) & (df['Data da Transação'].dt.hour == hour)
+                mask = (df['Linha'] == selected_line) & (df['Hora Transação'] == hour)
                 filtered = df[mask]
                 
-                count = len(filtered)
+                count = len(filtered) #conta quantos
                 stats[bases[key]['fullname']] = count # Mapeia para o nome amigável (Bilhete Único, etc)
-                stats['Passageiros_Total'] += count
+                stats['Passageiros_Total'] += count #adiciona ao total 
                 
                 if 'Nº Carro' in filtered.columns:
                     stats['Veiculos_Unicos'].update(filtered['Nº Carro'].unique())
+            else:
+                stats[bases[key]['fullname']] = 0
         
         # Cálculo da média por veículo
         qtd_veiculos = len(stats['Veiculos_Unicos'])
         stats['Passageiros_por_Veiculo'] = stats['Passageiros_Total'] / qtd_veiculos if qtd_veiculos > 0 else 0
-        
         # Limpeza para o DataFrame
         del stats['Veiculos_Unicos']
         hourly_data.append(stats)
-        
     return pd.DataFrame(hourly_data)
