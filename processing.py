@@ -112,10 +112,9 @@ def get_daily_transaction_counts(selected_date):
         
         try:
             val = int(dfs[i]['Linha'].count())
-            st.write(f"{i}: {val} ({type(val)})")
             data[column_name] = [val]
         except Exception as e:
-            st.write(f"{i} FAILED: {e}")
+            print(f"{i} FAILED: {e}")
             data[column_name] = [0]
     
     return pd.DataFrame(data)
@@ -132,13 +131,6 @@ def get_transaction_counts_in_range(start_date, quant_days):
     df = pd.concat(data, axis=0, ignore_index=True)
      # Force correct types after concat
     df['Dia das Transações'] = pd.to_datetime(df['Dia das Transações'])
-    st.write(df)        # add this — show raw df before any conversion
-    st.write(df.dtypes)
-    # for col in df.columns:
-    #     if col != 'Dia das Transações':
-    #         df[col] = pd.to_numeric(df[col], errors='coerce')
-    
-    st.write(data[0])
     return df
 
 

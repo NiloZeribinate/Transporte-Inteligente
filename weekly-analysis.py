@@ -114,7 +114,6 @@ with st.container():
     load_functions('weekly_df', weekly_change)
     
     df = st.session_state['weekly_df']
-    st.write("weekly_df:", st.session_state['weekly_df'])
     daily_count_chart(df)
 
 st.divider() # -------------------------

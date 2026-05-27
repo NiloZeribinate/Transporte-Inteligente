@@ -82,60 +82,60 @@ def daily_count_chart(df):
 
 
 def subsidy_charts(trans_df, subsidy_df):
-	trans_series = trans_df.drop(columns=["Dia das Transações"]).sum()
-	trans_sum = trans_series.sum()
+    trans_series = trans_df.drop(columns=["Dia das Transações"]).sum()
+    trans_sum = trans_series.sum()
 
-	subsidy_series = subsidy_df.drop(columns=["Dia das Transações"]).sum()
-	subsidy_sum = subsidy_series.sum()
+    subsidy_series = subsidy_df.drop(columns=["Dia das Transações"]).sum()
+    subsidy_sum = subsidy_series.sum()
 
-	both_sum = [trans_sum, subsidy_sum]
+    both_sum = [trans_sum, subsidy_sum]
 
-	all_df = pd.DataFrame({
-	    "Origem":      ["Transporte", "Subsídio"],
-	    "value":       both_sum,
-	    "Valor Total": map(money_format, both_sum)
-	})
+    all_df = pd.DataFrame({
+        "Origem":      ["Transporte", "Subsídio"],
+        "value":       both_sum,
+        "Valor Total": map(money_format, both_sum)
+    })
 
-	trans_series = trans_series.reset_index(name='value').rename(columns={'index': 'Categoria'})
-	trans_series['Valor Total'] = trans_series['value'].map(money_format)
+    trans_series = trans_series.reset_index(name='value').rename(columns={'index': 'Categoria'})
+    trans_series['Valor Total'] = trans_series['value'].map(money_format)
 
-	subsidy_series = subsidy_series.reset_index(name='value').rename(columns={'index': 'Categoria'})
-	subsidy_series['Valor Total'] = subsidy_series['value'].map(money_format)
+    subsidy_series = subsidy_series.reset_index(name='value').rename(columns={'index': 'Categoria'})
+    subsidy_series['Valor Total'] = subsidy_series['value'].map(money_format)
 
 
-    
-	col1, col2, col3 = st.columns([1, 1, 1])
-    
-    
-	col1.vega_lite_chart(all_df, {
+
+    col1, col2, col3 = st.columns([1, 1, 1])
+
+
+    col1.vega_lite_chart(all_df, {
         "mark": {"type": "arc", "innerRadius": 60},
         "title": "Proporção Transporte/Subsídio",
         "encoding": {
-            "theta": {"field": "value", "type": "quantitative"},
-            "color": {"field": "Origem", "type": "nominal"},
-            "tooltip": [{"field": "Origem"}, {"field": "Valor Total"}]
-        }
+        "theta": {"field": "value", "type": "quantitative"},
+        "color": {"field": "Origem", "type": "nominal"},
+        "tooltip": [{"field": "Origem"}, {"field": "Valor Total"}]
+    }
     },  width='stretch')
-    
-	col2.vega_lite_chart(trans_series, {
+
+    col2.vega_lite_chart(trans_series, {
         "mark": {"type": "arc", "innerRadius": 60},
         "title": "Proporção BU-BE-Gratuidade no Transporte",
         "encoding": {
-            "theta": {"field": "value", "type": "quantitative"},
-            "color": {"field": "Categoria", "type": "nominal"},
-            "tooltip": [{"field": "Categoria"}, {"field": "Valor Total"}]
+        "theta": {"field": "value", "type": "quantitative"},
+        "color": {"field": "Categoria", "type": "nominal"},
+        "tooltip": [{"field": "Categoria"}, {"field": "Valor Total"}]
         }
     },  width='stretch')
-    
-	col3.vega_lite_chart(subsidy_series, {
+
+    col3.vega_lite_chart(subsidy_series, {
         "mark": {"type": "arc", "innerRadius": 60},
         "title": "Proporção BU-BE-Gratuidade no Subsídio",
         "encoding": {
-            "theta": {"field": "value", "type": "quantitative"},
-            "color": {"field": "Categoria", "type": "nominal"},
-            "tooltip": [{"field": "Categoria"}, {"field": "Valor Total"}]
+        "theta": {"field": "value", "type": "quantitative"},
+        "color": {"field": "Categoria", "type": "nominal"},
+        "tooltip": [{"field": "Categoria"}, {"field": "Valor Total"}]
         }
-    },  width='stretch')
+        },  width='stretch')
 
 
 
