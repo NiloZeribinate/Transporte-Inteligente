@@ -17,24 +17,22 @@ def daily_change():
 
 init_variable('last_sunday_weekly', None)
 init_variable('last_sunday_subsidy', None)
-
+init_variable('weekly_df', None)  # add this
+init_variable('hourly_df', None)  # and this
+init_variable('trans_df', None)   # and this
+init_variable('subsidy_df', None) # and this
 
 def weekly_change():
     selected_date = st.session_state['selected_date']
     
     last_sunday = selected_date - datetime.timedelta( selected_date.weekday() + 1 )
-    
-    if last_sunday == st.session_state['last_sunday_weekly']:
-        return
-    else:
-        st.session_state['last_sunday_weekly'] = last_sunday
 
     data = get_transaction_counts_in_range(last_sunday, 7)
 
-    data['Média'] = [1300000, 3200000, 3300000, 2900000, 2800000, 2600000, 1300000]
-    
+    data['Media'] = [1300000, 3200000, 3300000, 2900000, 2800000, 2600000, 1300000]
+    data['Dia das Transações'] = pd.to_datetime(data['Dia das Transações'])
     st.session_state['weekly_df'] = data
-
+    
 
 def subsidy_change():
     selected_date = st.session_state['selected_date']
@@ -111,11 +109,11 @@ st.divider() # -------------------------
 
 with st.container():
     st.header('Balanço da Semana')
-
+    st.write(st.session_state.get('last_sunday_weekly'))
     load_functions('weekly_df', weekly_change)
     
     df = st.session_state['weekly_df']
-
+    st.write("weekly_df:", st.session_state['weekly_df'])
     daily_count_chart(df)
 
 st.divider() # -------------------------

@@ -9,7 +9,7 @@ bases = {
 	'be': {
 		'dir': './org-BE/',
 		'pref': 'be_',
-		'dayfirst': True,
+		'dayfirst': False,
 		'fullname': 'Bilhetagem Eletrônica',
 		'color': '#2ca1e7',
         'suf':'_BE'
@@ -17,7 +17,7 @@ bases = {
 	'bu': {
 		'dir': './diario/org/',
 		'pref': 'bu_',
-		'dayfirst': True,
+		'dayfirst': False,
 		'fullname': 'Bilhete Único',
 		'color': '#ff6683',
         'suf':'_BU'
@@ -25,7 +25,7 @@ bases = {
 	'gt': {
 		'dir': './GT/',
 		'pref': 'gt_',
-		'dayfirst': False,
+		'dayfirst': True,
 		'fullname': 'Gratuidade',
 		'color': '#ffcb61',
         'suf':'_GT'
@@ -104,7 +104,7 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
 
 def get_daily_transaction_counts(selected_date):
     data = {
-        'Dia das Transações': [ selected_date ]
+        'Dia das Transações': [ pd.Timestamp(selected_date) ] #keep it as a date
     }
     dfs = get_dfs(selected_date)
     
@@ -112,9 +112,12 @@ def get_daily_transaction_counts(selected_date):
         column_name = bases[i]['fullname']
         
         try:
-            data[column_name] = [dfs[i]['Linha'].count()]
-        except:
-            data[column_name] = [None]
+            val = int(dfs[i]['Linha'].count())
+            st.write(f"{i}: {val} ({type(val)})")
+            data[column_name] = [val]
+        except Exception as e:
+            st.write(f"{i} FAILED: {e}")
+            data[column_name] = [0]
     
     return pd.DataFrame(data)
     
@@ -128,7 +131,15 @@ def get_transaction_counts_in_range(start_date, quant_days):
     
     
     df = pd.concat(data, axis=0, ignore_index=True)
+     # Force correct types after concat
+    df['Dia das Transações'] = pd.to_datetime(df['Dia das Transações'])
+    st.write(df)        # add this — show raw df before any conversion
+    st.write(df.dtypes)
+    # for col in df.columns:
+    #     if col != 'Dia das Transações':
+    #         df[col] = pd.to_numeric(df[col], errors='coerce')
     
+    st.write(data[0])
     return df
 
 
@@ -210,11 +221,11 @@ def merge_hourly_date(hourly_groups):
             continue #se hourly_groups[key] n existir, n tem pra que adicionar um null 
         try:
             if merge is not None:
-                merge = pd.merge(merge, hourly_groups[key], on='Data da Transação', how='outer')
+                merge = pd.merge(merge,df,on='Hora Transação',how='outer')
             else:
-                merge=hourly_groups[key]
+                merge = df
         except Exception as e:
-            print('merge_hourly_date 01:') #??? porque isso aconteceria
+            print('merge_hourly_date:') #??? porque isso aconteceria
             print(e)
             print(key)
     

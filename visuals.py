@@ -8,7 +8,7 @@ def daily_count_chart(df):
         col1, col2 = st.columns([3,1])
 
         long_df = df.melt(
-        id_vars    = ['Dia das Transações', 'Média'], #o que vai ser os identificadores, vai ficar fixo
+        id_vars    = ['Dia das Transações', 'Media'], #o que vai ser os identificadores, vai ficar fixo
         value_vars = df.drop(columns=['Dia das Transações','Media']).columns.array, #o que vai ser uma nova linha 
         var_name   = 'modality', #o nome do variavel, que no caso vai ser as linhas
         value_name = 'quantity') #o nome do value(do header da coluna onde vai ficar a quantidade))
@@ -59,18 +59,18 @@ def daily_count_chart(df):
                         'type': 'ordinal'
                     },
                     'y': {
-                        'field': 'Média', 
+                        'field': 'Media', 
                         'type': 'quantitative'
                     },
                     'tooltip': [
-                    {'field': 'Média', 'title': 'Média do Mês', 'format': ',.0f'}
+                    {'field': 'Media', 'title': 'Média do Mês', 'format': ',.0f'}
                     ]
                 },
                 },
                 ]
         })
 
-        df_sum = df.drop(columns=['Dia das Transações', 'Média']).sum()
+        df_sum = df.drop(columns=['Dia das Transações', 'Media']).sum()
         df_sum['Total'] = df_sum.sum()
 
         styler = df_sum.to_frame().style.format( thousands = '.')
