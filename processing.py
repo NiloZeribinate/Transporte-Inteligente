@@ -67,10 +67,9 @@ def get_dfs(selected_date): #mesma funcao de pegar dataframe de antes, so que ad
     data = {}
     
     for key in st.session_state.bases:
-        nome_final = (
-            f"{selected_date.year}-{selected_date.month:02d}-{selected_date.day:02d}{st.session_state.bases[key]['suf']}.csv"
-        )
-
+        nome_final = (f"{selected_date.year}-{selected_date.month:02d}-{selected_date.day:02d}{st.session_state.bases[key]['suf']}.csv")
+        if key=='gt':
+            nome_final = (f"{selected_date.year}-{selected_date.day:02d}-{selected_date.month:02d}{st.session_state.bases[key]['suf']}.csv") #template de arquivo de GT eh diferente
         file = encontrar_arquivo(nome_final)
         if file is not None:
             file.seek(0) #se ele ler o mesmo arquivo mais de uma vez, como file eh um tipo *FILE, tem que resetar o ponteiro pro inicio do arquivo
@@ -198,11 +197,8 @@ def get_hourly_groups(dfs, selected_date):
             if dfs[key] is None or dfs[key].empty:
                 data[key] = None
                 continue
-
             df=dfs[key].groupby('Hora Transação').size().reset_index(name=bases[key]['fullname'])
-            # A seguinte linha deverá ser deletada após o ajuste no código versão gratuidade, e o código da função daily_change deve ser descomentada, além de retirar o "selected_date" daqui também:
-            if(key == 'gt'):
-                df = df[df['Data da Transação'].dt.day == selected_date.day]
+
                 
             data[key] = df
             

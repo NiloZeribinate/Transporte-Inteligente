@@ -14,13 +14,14 @@ def daily_change():
     merge = merge_hourly_date(daily_chart_data)
     st.session_state['hourly_df'] = merge
 
-
+init_variable('selected_date', datetime.date(2025, 8, 5))
 init_variable('last_sunday_weekly', None)
 init_variable('last_sunday_subsidy', None)
-init_variable('weekly_df', None)  # add this
-init_variable('hourly_df', None)  # and this
-init_variable('trans_df', None)   # and this
-init_variable('subsidy_df', None) # and this
+init_variable('weekly_df', None)  # 
+init_variable('hourly_df', None)  #
+init_variable('trans_df', None)   # 
+init_variable('subsidy_df', None) # 
+#inicializando variaveis 
 
 def weekly_change():
     selected_date = st.session_state['selected_date']
@@ -60,7 +61,7 @@ def change():
 
 
 
-init_variable('selected_date', datetime.date(2025, 8, 5))
+
 
 with st.container():
     st.title('Analise Semanal e Diaria')
